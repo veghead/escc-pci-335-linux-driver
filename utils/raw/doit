@@ -1,0 +1,26 @@
+#!/bin/bash
+./shifter 1 out out1
+./shifter 2 out out2
+./shifter 3 out out3
+./shifter 4 out out4
+./shifter 5 out out5
+./shifter 6 out out6
+./shifter 7 out out7
+
+echo 0shift:
+./ts_comp out savefile
+echo 1shift:
+./ts_comp out1 savefile
+echo 2shift:
+./ts_comp out2 savefile
+echo 3shift:
+./ts_comp out3 savefile
+echo 4shift:
+./ts_comp out4 savefile
+echo 5shift:
+./ts_comp out5 savefile
+echo 6shift:
+./ts_comp out6 savefile
+echo 7shift:
+./ts_comp out7 savefile
+

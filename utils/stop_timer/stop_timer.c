@@ -1,0 +1,60 @@
+/* $Id: stop_timer.c,v 1.2 2003/11/11 21:01:54 carl Exp $ */
+/*
+Copyright(c) 2003, Commtech, Inc.
+stop_timer.c -- user mode function to stop the onboard escc timer
+
+usage:
+ stop_timer port 
+
+ The port can be any valid escc port (0,1) 
+ 
+
+*/
+
+//#define ESCC
+#define ESCCP
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#ifdef ESCCP
+ #include "../esccpdrv.h"
+#endif
+#ifdef ESCC
+ #include "../esccdrv.h"
+#endif
+#include <sys/ioctl.h>
+#include <errno.h>
+#include <math.h>
+#include <sys/poll.h>
+
+int main(int argc,char*argv[])
+{
+int escc;
+char nbuf[128];
+unsigned port;
+if(argc<2)
+{
+printf("usage:%s port\n",argv[0]);
+exit(1);
+}
+port = atoi(argv[1]);
+sprintf(nbuf,"/dev/escc%u",port);
+escc = open(nbuf,O_RDWR);
+if(escc == -1)
+{
+printf("cannot open %s\n",nbuf);
+perror(NULL);
+exit(1);
+}
+printf("opened %s\r\n",nbuf);
+
+
+if(ioctl(escc,ESCC_STOP_TIMER)==-1) perror(NULL);
+else printf("%s ==> Timer Stopped\n",nbuf);
+close(escc);
+return 0;
+}
+

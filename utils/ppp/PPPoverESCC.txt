@@ -1,0 +1,178 @@
+Connecting the ESCC up to an IP network using PPP.
+
+Note: Much of what follows has been found to work for us here in a lab
+environment.  We do not claim to be experts in PPP networking.  If there is
+anything that we suggest doing that doesn't work or that you believe is in
+error, we apologize.
+
+Prereqs:
+
+Compile PPP support into the kernel (or as modules), select (at a minimum?)
+
+'PPP (point-to-point protocol) Support'
+'PPP Support for async serial ports'
+'PPP BSD Deflate compression'
+'PPP Deflate compression'
+
+the resulting modules that are needed are:
+
+slhc
+ppp_generic
+ppp_async
+bsd_comp
+ppp_deflate
+
+The pty.c in this directory has been adjusted to give a maximum frame size of
+4k.
+
+Unless you plan to add a handler for erors (XDU - transmit underrun and
+RDO/RFO - receive overflow) the link will freeze when one occurs.  To work
+around this, you con uncomment the #define FLUSH_ON_ERROR in the esccdrv.h
+file and recompile the driver module.  This executes a basic flush when an
+error is detected.  It appears that this is enough to allow the link to stay
+up when using pty.c.
+
+If you notice a large number of errors reported (either in ifconfig or XDU &
+RFO errors from the ESCC istatus program), you should likely try to minimize
+the number of interrupts that are occuring, as this is the likely source of
+the trouble.  For starters, try disabling the RFS interrupt (set IMR=0x44).
+We have seen somewhat more success by increasing the number of receive and
+transmit buffers (n_rbufs and n_tbufs).  You can also try changing the
+txqueuelen in ifconfig, something like 'ifconfig ppp0 txqueuelen 50' (make
+sure your new value is not greater than n_rbuf and n_tbuf). 
+
+These methods are rather subjective though, Reducing the bit rate is the only 
+sure fire way to successfully decrease the number of interrupts.
+
+
+Kernel 2.4 (tested on RedHat 9)
+-------------------------------
+
+With these modules in place, you can build the escc driver module.
+
+Uncompress the escc sources:
+
+   tar -xzvf esccp_335_xxx.tar.gz
+
+Change into the module source directory:
+
+   cd esccp
+   vi esccdrv.h (uncomment #define FLUSH_ON_ERROR)
+
+Create the esccp.o module:
+
+   make -f Makefile_2.4
+
+Load the esccp.o module and create the devnodes:
+
+   ./mkdev_2.4.sh
+
+Change into the example code directory:
+
+   cd utils
+
+Build the examples:
+
+   make
+   make install
+
+Configure the card/port:
+
+   cd bin
+   ./setclock 0 6000000
+   ./esccpsettings 0 ../ppp/hdlcset_for_ppp
+
+Execute the pty wedge program:
+
+   ./pty /dev/escc0
+
+This will return something like '/dev/pts/0', substitute the result into the 
+following line for '/dev/pts/x'  (also substitute any valid parameters to pppd 
+here including the IP's that you really want)
+
+   pppd -detach local 192.168.2.50:192.168.2.51 /dev/pts/x &
+
+Execute an identical sequence on second PC swapping the IP addresses in the last
+command.  You need to execute the pppd command at about the same time on both
+PC's as it will timeout if it does not get a response from the other side.
+
+Note that there was a full crossover cable RD->SD TT->RT both directions in 
+place between the two boards.  The above settings uses clock mode 0b, and is 
+running at 1Mbps.
+
+Running 'ifconfig' should show ppp0 with IP's on both sides.
+
+Things like
+
+   ping 192.168.2.51 
+
+should now work, as should any other IP related utility (ie setup routing, 
+gateways etc, scp, ftp, etc)
+
+This was tested with a stock redhat 9.0 install.
+
+
+Kernel 2.6 (tested on Fedora Core 3)
+-------------------------------
+
+With these modules in place, you can build the escc driver module.
+
+Uncompress the escc sources:
+
+   tar -xzvf esccp_335_xxx.tar.gz
+
+Change into the module source directory:
+
+   cd esccp
+   vi esccdrv.h (uncomment #define FLUSH_ON_ERROR)
+
+Create the esccp.o module:
+
+   make
+
+Load the esccp.o module and create the devnodes:
+
+   ./mkdev.sh
+
+Change into the example code directory:
+
+   cd utils
+
+Build the examples:
+
+   make
+   make install
+
+Configure the card/port:
+
+   cd bin
+   ./setclock 0 6000000
+   ./esccpsettings 0 ../ppp/hdlcset_for_ppp
+
+Execute the pty wedge program:
+
+   ./pty /dev/escc0
+
+This will return something like 'using: /dev/pts/0', substitute the result into 
+the following line for '/dev/pts/x'  (also substitute any valid parameters to 
+pppd here including the IP's that you really want)
+
+   pppd updetach local nobsdcomp pts/2 192.168.2.50:192.168.2.51 &
+
+Execute an identical sequence on second PC swapping the IP addresses in the last
+command.  You need to execute the pppd command at about the same time on both
+PC's as it will timeout if it does not get a response from the other side.
+
+Note that there was a full crossover cable RD->SD TT->RT both directions in 
+place between the two boards.  The above settings uses clock mode 0b, and is 
+running at 1Mbps.
+
+Running 'ifconfig' should show ppp0 with IP's on both sides.
+
+Things like
+
+   ping 192.168.2.51 
+
+should now work, as should any other IP related utility (ie setup routing, 
+gateways etc, scp, ftp, etc)
+

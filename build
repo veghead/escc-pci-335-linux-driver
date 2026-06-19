@@ -1,0 +1,7 @@
+make -C /lib/modules/5.15.0-179-generic/build M=/home/src/escc5/esccp clean
+make -C /lib/modules/5.15.0-179-generic/build M=/home/src/escc5/esccp modules
+strings /home/src/escc5/esccp/esccp.ko | grep -E 'escc_major|253' || true
+sudo modprobe -r esccp 2>/dev/null || true
+sudo insmod /home/src/escc5/esccp/esccp.ko
+dmesg | tail -n 30
+grep esccp /proc/devices

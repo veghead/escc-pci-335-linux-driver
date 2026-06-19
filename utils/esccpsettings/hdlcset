@@ -1,0 +1,87 @@
+#################################################################################
+#    ESCC settings file                                                         #
+#    This file uses the following format:                                       #
+#    register = 0xYY                                                            # 
+#                                                                               #
+#    where register is one of the members of struct escc_setup                  #
+#    (see esccpdrv.h or esccdrv.h)                                              #
+#    the register name must be in column 1(no tabs or spaces preceeding it)     #
+#                                                                               #
+#    The 0xYY is the value to be written to that register (in HEX)              #
+#                                                                               #
+#    The 82532 data sheet will give you a good idea of what each register does, #
+#    I don't see any point in recreating the data sheet here                    #
+#################################################################################
+#shared with all modes
+mode = 0x88
+ccr0 = 0x80
+ccr1 = 0x16
+ccr2 = 0x38
+ccr3 = 0x00
+ccr4 = 0x00
+bgr = 0x0
+timr = 0x03
+imr0 = 0x04
+imr1 = 0x00
+pim = 0xff
+ipc = 0x03
+iva = 0x00
+pcr = 0xe0
+
+#receive buffering paramters
+#number of receive (frame) buffers
+n_rbufs = 0x0a
+
+#size of each receive frame buffer
+n_rfsize_max = 0x1000
+
+#transmit buffering parameters
+#number of transmit (frame) buffers
+n_tbufs = 0x0a
+
+#size of each transmit frame buffer
+n_tfsize_max = 0x1000
+
+#not used on the ESCC-PCI
+#(or set by driver if and when DMA functionality added to the ESCC-ISA driver)
+xbcl = 0x00
+xbch = 0x00
+
+#only used in clock mode 5
+tsax = 0x00
+tsar = 0x00
+xccr = 0x00
+rccr = 0x00
+
+#hdlc only
+xad1 = 0xff
+xad2 = 0xff
+ral1 = 0xff
+ral2 = 0xff
+rah1 = 0xff
+rah2 = 0xff
+
+rlcr = 0x00
+aml = 0x00
+amh = 0x00
+pre = 0x00
+
+#async only
+mxn = 0x00
+mxf = 0x00
+xon = 0x00
+xoff = 0x00
+
+#shared async/bisync
+tcr  = 0x00
+dafo = 0x00
+rfc = 0x00
+
+#bisync only
+synl = 0x00
+synh = 0x00
+#################################################################################
+#                                                                               #
+# End of settings file                                                          #
+#                                                                               #
+#################################################################################

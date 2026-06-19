@@ -1,0 +1,188 @@
+Installation instructions for Commtech's ESCC-PCI[-335]
+Synchronous RS-422/485 PCI Serial Adapter
+
+1.0 Getting the latest software
+
+1.1 Download latest SuperFastcom software package: 
+    http://www.commtech-fastcom.com/CommtechSoftware.html
+
+1.1 Uncompress the archive 
+    (NOTE: If you do not have a -335 board, the filenames below will simply
+           be esccp* instead of esccp335*.)
+
+	$unzip esccp335_ddmmmyyyy.zip
+
+    This creates an escc_pci_335 directory that contains all the software 
+    for the card, including Micro$oft operating systems.  As a nifty linux
+    developer, all you need is the linux tarball.
+
+	$cp escc_pci_335/linux/esccp335_mm_dd_yyyy.tar.gz .
+	$rm esccp335_ddmmmyyyy.zip
+	$rm -rf escc_pci_335
+	$tar -xzf esccp335_mm_dd_yyyy.tar.gz
+
+    Now you have an esccp directory.  For the rest of this procedure, I am 
+    just going to assume that this is in the root directory, /esccp.  You
+    can put it wherever you like.
+
+2.0 Build and install the driver
+
+2.1 For 2.4.x kernels
+
+    You must have the kernel source tree for your specific kernel version
+    installed.  To verify, you can look in /usr/src for a directory 
+    linux 2.4.xxxxx, if you do not have this, you will need to install your
+    kernel's source package.
+
+    You will need to create a symbolic link in your source tree.  Change the
+    xxxxx to match your installed source version.  Right now, mine is
+    linux-2.4.20-8.
+
+	$cd /usr/src
+	$ln -s linux-xxxxx linux
+
+    To build the ESCCP kernel module (esccp.o) run:
+
+	$make -f Makefile_2.4
+
+    Then you can run this script to create the devnodes /dev/escc0 - escc5
+    and insmod the driver.  You only need to run this once.  It will copy 
+    the module to the correct location  (hopefully) /lib/modules/xxx/char, 
+    but you must manually add the insmod or depmod line to an install script 
+    to get the driver to load a boot.  Or you can just 'insmod esccp.o' 
+    prior to device usage.
+    NOTE: If depmod gives you errors, check the depmod section below.
+
+	$./mkdev_2.4.sh
+
+    Then you can build all of the example/utility programs from the utils 
+    directory.  The executables will be placed in the utils/bin directory.
+
+	$make -f Makefile_2.4 tools
+
+    See the README file for setting up and testing the card.
+
+
+2.2 For 2.6.x through 5.x kernels
+
+    We have two options for building the module.  Of course the "best" method
+    is to recompile a new kernel turning on exactly what you want and then 
+    build the ESCC's module for that kernel.  Or you can take the easy way out 
+    and compile the module for use in a pre-built kernel.
+
+    For those of you who are OK with compiling your own kernel, go for it.
+
+    For those of you who do not want to rebuild a kernel, read on.
+
+2.2.1 Compiling module for a pre-built kernel
+
+    To build the module, you can simply run
+
+	$cd /esccp
+	$make
+
+    NOTE: If $make fails, you may need to install the kernel source or the
+    kernel headers for the exact kernel you are targeting.  The build uses
+    /lib/modules/$(uname -r)/build.  If that path does not exist, install the
+    matching linux-headers/linux-devel package or adjust KDIR in the Makefile.
+
+2.2.2 Notes for Linux 5.15 and newer kernels
+
+    This driver can only be built on a Linux system with the target kernel
+    headers installed.  A macOS host will not have the Linux kernel build tree
+    required by the module Makefile.
+
+    The updated Makefile uses the current external-module interface:
+
+	$make -C /lib/modules/$(uname -r)/build M=$PWD modules
+
+    After the module builds, load it as usual with insmod/modprobe and create
+    device nodes with the existing mkdev.sh script if your system does not do
+    that automatically.
+
+    Then you can run this script to create the devnodes /dev/escc0 - escc5
+    and insmod the driver.  You only need to run this once.  It will copy 
+    the module to the correct location  
+    (hopefully) /lib/modules/xxx/kernel/drivers/char, but you must manually 
+    add the insmod or depmod line to an install script to get the driver to 
+    load a boot.  Or you can just 'insmod esccp.ko' prior to device usage.
+
+    NOTE: If depmod gives you errors, check the depmod section below.
+
+	$./mkdev.sh
+
+    Then you can build all of the example/utility programs from the utils 
+    directory.  The executables will be placed in the utils/bin directory.
+
+	$make tools
+
+    See the README file for setting up and testing the card.
+
+2.3 Compile board for old version (ESCC-PCI)
+
+    To compile the driver for older revisions of the hardware (i.e. non -335)
+    simply edit the esccdrv.h file and comment out the line:
+
+	#define VER_3_0
+
+    Then recompile the driver using your kernel's method above.
+
+    The following programs will not operate on the older card:
+
+	setclock
+	getclock
+	getfeatures
+	setfeatures
+
+    Use 'esccclock' for the older version cards and 'setclock' for -335 cards.
+
+2.4 Depmod errors
+
+    If depmod generates a error such as:
+
+    depmod: *** Unresolved symbols in /lib/modules/2.4.20-8/kernel/char/esccp.o
+     
+    and 'depmod -e' returns something like
+    depmod: *** Unresolved symbols in /lib/modules/2.4.20-8/kernel/char/esccp.o
+    depmod: 	securebits
+    depmod: 	__wake_up
+    depmod: 	__generic_copy_from_user
+    depmod: 	__release_region
+    depmod: 	kmalloc
+    depmod: 	unregister_chrdev
+    depmod: 	register_chrdev
+    depmod: 	__check_region
+    depmod: 	create_proc_entry
+    depmod: 	vfree
+    depmod: 	pcibios_present
+    depmod: 	free_irq
+    depmod: 	interruptible_sleep_on
+    depmod: 	__pollwait
+    depmod: 	kfree
+    depmod: 	remove_proc_entry
+    depmod: 	request_irq
+    depmod: 	pci_find_device
+    depmod: 	sprintf
+    depmod: 	jiffies
+    depmod: 	__vmalloc
+    depmod: 	__request_region
+    depmod: 	printk
+    depmod: 	add_timer
+    depmod: 	__const_udelay
+    depmod: 	ioport_resource
+    depmod: 	__generic_copy_to_user
+
+    Then edit the Makefile and comment the current DEPENDFLAGS line, and 
+    uncomment the modversions defined DEPENDFLAGS line.  Run :
+
+	2.4 kernels
+	$ make clean
+	$ make
+
+	2.6 kernels
+    $make -C /usr/src/linux-2.6.xxx M=$PWD clean
+    $make -C /usr/src/linux-2.6.xxx M=$PWD modules
+
+    Then copy the new esccp.o or esccp.ko file to the correct location and 
+    try again.
+
