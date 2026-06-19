@@ -1,3 +1,9 @@
+# Linux driver for the Commtech Fastcom ESCC-PCI-335 High Speed Dual Channel Sync/Async Interface
+
+*This is the original commtech supplied driver for kernel 2.6 updated to work with more recent kernels. In particular 5.15.*
+
+
+## Original README content
 For installation instructions, see the INSTALL file.
 
 For Linux 5.15 and newer, build the kernel module on a Linux host with the

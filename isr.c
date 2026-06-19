@@ -502,7 +502,6 @@ topofisr:
 				{
 					if (opmode == OPMODE_HDLC)
 					{
-						int i;
 						dev->status |= ST_ONLP;
 #ifdef FLUSH_ON_ERROR
 						// issue a flush here!
